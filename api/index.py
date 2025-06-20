@@ -59,4 +59,4 @@ def submit():
     return {"status": "success", "message": "Image and location saved"}
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5100)
