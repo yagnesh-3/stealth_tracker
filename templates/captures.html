@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Captured Data</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #f9f9f9;
+      text-align: center;
+    }
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+    .card {
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 10px;
+      width: 220px;
+    }
+    .card img {
+      width: 200px;
+      height: auto;
+      border-radius: 6px;
+    }
+    .info {
+      margin-top: 8px;
+      font-size: 14px;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h1>📸 Captured Submissions</h1>
+  <div class="gallery">
+    {% for image in images %}
+      <div class="card">
+        <img src="{{ image.url }}" alt="{{ image.filename }}">
+        <div class="info">{{ image.info }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</body>
+</html>
